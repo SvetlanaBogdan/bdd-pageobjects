@@ -46,4 +46,35 @@ public class LoginTest {
         assertEquals(balance1Before - amount, balance1After);
         assertEquals(balance2Before + amount, balance2After);
     }
+    @Test
+    void shouldNotAllowTransferMoreThanBalance() {
+        open("http://localhost:9999");
+
+        var authInfo = DataHelper.getAuthInfo();
+        var code = DataHelper.getVerificationCode();
+
+        LoginPage loginPage = new LoginPage();
+        VerificationPage verificationPage =
+                loginPage.login(authInfo.getLogin(), authInfo.getPassword());
+        DashboardPage dashboardPage =
+                verificationPage.verify(code.getCode());
+
+        int balanceFrom = dashboardPage.getCardBalance(1);
+        int balanceTo = dashboardPage.getCardBalance(0);
+
+        int amount = 55000;
+
+        var secondCard = DataHelper.getSecondCard();
+
+        TransferPage transferPage = dashboardPage.selectCardToTransfer(0);
+        DashboardPage updatedPage =
+                transferPage.transferMoney(amount, secondCard.getNumber());
+
+        int balanceFromAfter = updatedPage.getCardBalance(1);
+        int balanceToAfter = updatedPage.getCardBalance(0);
+
+        assertEquals(balanceFrom, balanceFromAfter);
+        assertEquals(balanceTo, balanceToAfter);
+    }
+
 }
